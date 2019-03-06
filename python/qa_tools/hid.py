@@ -9,7 +9,7 @@
 
 import os
 
-qa_hid='sudo /usr/local/bin/qa-hid'
+qa_hid='sudo /usr/bin/qa-hid'
 
 
 def call_hid(command_line):
