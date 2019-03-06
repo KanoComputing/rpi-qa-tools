@@ -1,0 +1,4 @@
+#
+# Allow regular users to run qa-hid tool as root without password prompt
+#
+%sudo   ALL=(root) NOPASSWD: /usr/bin/qa-hid

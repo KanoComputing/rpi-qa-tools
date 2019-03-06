@@ -1,0 +1,4 @@
+tools/qa-hid/qa-hid /usr/bin
+tools/qa-findimage/qa-findimage /usr/bin
+conf/etc/sudoers.d /etc
+python /usr/lib/python2.7/dist-packages
