@@ -18,7 +18,7 @@ Package: rpi-qa-tools
 Architecture: any
 Depends: ${misc:Depends},
    python,
-   libdocopt,
+   libdocopt0,
    libc6,
    libstdc++6,
    libopencv-highgui2.4-deb0,
