@@ -142,7 +142,7 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
         *pheight = height;
     }
 
-    return ((void *)dmxImagePtr);
+    return (dmxImagePtr);
 }
 
 #endif
