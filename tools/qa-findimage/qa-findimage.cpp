@@ -125,7 +125,7 @@ int main (int argc, char** argv)
 }
 
 
-void MatchingMethod (int, void*)
+void MatchingMethod (__attribute__((unused)) int count, __attribute__((unused)) void *userdata)
 {
     // Choose an alternative mathing method here
     // CV_TM_SQDIFF, CV_TM_SQDIFF_NORMED, CV_TM_CCORR
