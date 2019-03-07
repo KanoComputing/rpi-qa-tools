@@ -10,6 +10,8 @@
  *
  */
 
+#include "rpi-screenshot.h"
+
 #ifndef RPI
 
 // On non RPI systems, simply return no bitmap.
