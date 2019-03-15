@@ -29,9 +29,9 @@ def key_stroke(key, delay=0):
 
     
 def mouse_move(abs_x, abs_y):
-    command_line='{} mouse-move {} {}'.format(abs_x, abs_y)
+    command_line='{} mouse-move {} {}'.format(qa_hid, abs_x, abs_y)
     call_hid(command_line)
 
 def mouse_left_click():
-    command_line='{} mouse-click BTN_LEFT'
+    command_line='{} mouse-click BTN_LEFT'.format(qa_hid)
     call_hid(command_line)
