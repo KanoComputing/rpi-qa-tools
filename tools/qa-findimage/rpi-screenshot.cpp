@@ -14,26 +14,26 @@
 
 #include "qa-findimage/rpi-screenshot.h"
 
-#include <cstdint>
-#include <memory>
+#ifdef RPI
 
-#ifndef RPI
-
-// On non RPI systems, simply return no bitmap.
-#warning "non RPi build, creating a screenshot stub code"
-void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
-{
-    return nullptr;
-}
+#include <bcm_host.h>
 
 #else
 
-#include <bcm_host.h>
-#include <stdio.h>
+#warning "Non RPi build, stub the dispmanx functions"
+#include "qa-findimage/bcm_host_stub.h"
+
+#endif  // RPI
+
+
+#include <cstdint>
+#include <cstdio>
+#include <memory>
+
 
 #ifndef ALIGN_TO_16
 #define ALIGN_TO_16(x)  ((x + 15) & ~15)
-#endif
+#endif  // ALIGN_TO_16
 
 /*
  *  get_rpi_screenshot
@@ -146,5 +146,3 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
 
     return dmxImagePtr;
 }
-
-#endif

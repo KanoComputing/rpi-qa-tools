@@ -10,8 +10,19 @@
 
 
 #include <docopt/docopt.h>
+
+#ifdef RPI
+
 #include <linux/input.h>
 #include <linux/uinput.h>
+
+#else
+
+#define KEY_ENTER 0
+#define KEY_ESC 1
+
+#endif  // RPI
+
 #include <stdio.h>
 #include <unistd.h>
 

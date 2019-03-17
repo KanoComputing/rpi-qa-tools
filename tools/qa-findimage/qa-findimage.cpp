@@ -12,7 +12,8 @@
  *
  * Usage: findimage: <source image> <image to find> [output image | "ui"]
  *
- * A JSON string will be returned explaining if and where the image was found, for example:
+ * A JSON string will be returned explaining if and where the image was found,
+ * for example:
  *
  *     {
  *         "found": true,
@@ -52,7 +53,7 @@ using cv::Mat;
 using cv::Point;
 
 // function prototypes
-void MatchingMethod(int, void*, std::string &output_image);
+void MatchingMethod(int, void*, const std::string &output_image);
 
 // Global Variables
 Mat img;
@@ -143,7 +144,7 @@ int main(int argc, char** argv)
 
 void MatchingMethod(__attribute__((unused)) int count,
                     __attribute__((unused)) void *userdata,
-                    std::string &output_image)
+                    const std::string &output_image)
 {
     // Choose an alternative mathing method here
     // CV_TM_SQDIFF, CV_TM_SQDIFF_NORMED, CV_TM_CCORR
@@ -161,8 +162,8 @@ void MatchingMethod(__attribute__((unused)) int count,
 
     // The actual image search happens here
     result.create(result_rows, result_cols, CV_32FC1);
-    normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, Mat());
-    matchTemplate(img, templ, result, match_method);
+    cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, Mat());
+    cv::matchTemplate(img, templ, result, match_method);
 
     // Localizing the best match with minMaxLoc
     double minVal;
@@ -172,7 +173,7 @@ void MatchingMethod(__attribute__((unused)) int count,
     Point maxLoc;
     Point matchLoc;
 
-    minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat());
+    cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat());
 
     // For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all
     // the other methods, the higher the better
@@ -203,15 +204,9 @@ void MatchingMethod(__attribute__((unused)) int count,
         cv::Scalar rgb_green = cv::Scalar(0.0, 255, 0.0);
         cv::Scalar rgb_red = cv::Scalar(0.0, 0.0, 255);
 
-        rectangle(
-            img_display,
-            matchLoc,
-            Point(matchLoc.x + templ.cols, matchLoc.y + templ.rows),
-            found ? rgb_green : rgb_red,
-            2,
-            8,
-            0
-        );
+        Point match_coord(matchLoc.x + templ.cols, matchLoc.y + templ.rows);
+        cv::rectangle(img_display, matchLoc, match_coord,
+                  found ? rgb_green : rgb_red, 2, 8, 0);
 
         // Either save an image to show finding, or open up a window (on non RPI
         // systems)
@@ -222,7 +217,7 @@ void MatchingMethod(__attribute__((unused)) int count,
             cv::imshow(window_name, img_display);
             cv::waitKey(0);
         } else {
-            imwrite(output_image, img_display);
+            cv::imwrite(output_image, img_display);
         }
     }
 
