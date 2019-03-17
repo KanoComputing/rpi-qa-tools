@@ -12,6 +12,8 @@
 #ifndef TOOLS_QA_FINDIMAGE_RPI_SCREENSHOT_H_
 #define TOOLS_QA_FINDIMAGE_RPI_SCREENSHOT_H_
 
-void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight);
+#include <memory>
+std::shared_ptr<void> get_rpi_screenshot(bool verbose, int *pwidth,
+                                         int *pheight);
 
 #endif  // TOOLS_QA_FINDIMAGE_RPI_SCREENSHOT_H_

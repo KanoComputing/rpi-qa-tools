@@ -43,7 +43,8 @@
  *  in RGB colorspace.
  *
  */
-void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
+std::shared_ptr<void> get_rpi_screenshot(bool verbose, int *pwidth,
+                                         int *pheight)
 {
     int result = 0;
 
@@ -68,7 +69,7 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
     int height = modeInfo.height;
     int pitch = bytesPerPixel * ALIGN_TO_16(width);
 
-    void *dmxImagePtr = malloc(pitch * height);
+    std::shared_ptr<void> dmxImagePtr(malloc(pitch * height), free);
 
     if (dmxImagePtr == nullptr) {
         printf("unable to allocated image buffer\n");
@@ -111,7 +112,7 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
     // transfer the bitmap array
     result = vc_dispmanx_resource_read_data(resourceHandle,
                                             &rect,
-                                            dmxImagePtr,
+                                            dmxImagePtr.get(),
                                             pitch);
 
     if (result != 0) {

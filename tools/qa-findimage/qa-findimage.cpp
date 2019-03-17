@@ -45,6 +45,7 @@
 #include <stdio.h>
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "qa-findimage/rpi-screenshot.h"
@@ -100,7 +101,8 @@ int main(int argc, char** argv)
     if (!strcmp(CMDLINE_DISPMANX_SOURCE, source_image.c_str())) {
         int rows = 0;
         int cols = 0;
-        void *rpi_screen = get_rpi_screenshot(verbose, &cols, &rows);
+        std::shared_ptr<void> rpi_screen =
+            get_rpi_screenshot(verbose, &cols, &rows);
 
         if (!rpi_screen) {
             std::cout << "Error: could not take a dispmanx screenshot\n";
@@ -108,7 +110,7 @@ int main(int argc, char** argv)
         } else {
             // CV_8UC3 means 8-bit unsigned integer matrix, with 3 bytes per
             // channel.
-            img = Mat(rows, cols, CV_8UC3, rpi_screen);
+            img = Mat(rows, cols, CV_8UC3, rpi_screen.get());
             if (!img.data) {
                 std::cout << "Error: could not transform dispmanx data\n";
                 return 1;
