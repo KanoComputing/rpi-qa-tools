@@ -6,23 +6,29 @@
 # call "make NORPI=1" to build on non-Raspberry PI systems
 #
 
-DEFS="-DRPI"
+DEFS =
+
 
 RPI_INCS=-I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux
 RPI_LIBS=-L/opt/vc/lib -lbcm_host
 
 OPENCV_LIBS=-lopencv_highgui -lopencv_core -lopencv_imgproc
 
+CFLAGS := -std=c++11 -Wall $(OPENCV_LIBS)
+LDFLAGS :=
+
+
 all: qa-findimage
 
 qa-findimage: qa-findimage.cpp rpi-screenshot.cpp rpi-screenshot.h
 
 # allow to build on non RPI systems
-ifdef NORPI
-	$(eval DEFS = "-URPI")
-	$(eval RPI_INCS = "")
-	$(eval RPI_LIBS = "")
+ifndef NORPI
+	$(eval DEFS += "-DRPI")
+	$(eval CFLAGS += $(RPI_INCS))
+	$(eval LDFLAGS += $(RPI_LIBS))
 endif
 
-	$(CXX) -I.. $(DEFS) qa-findimage.cpp rpi-screenshot.cpp -Wall -o qa-findimage \
-	$(RPI_INCS) $(RPI_LIBS) -lstdc++ -std=c++11 $(OPENCV_LIBS)
+	$(CXX) -I.. $(CFLAGS) $(DEFS) $(LDFLAGS) \
+		qa-findimage.cpp rpi-screenshot.cpp \
+		-o qa-findimage
