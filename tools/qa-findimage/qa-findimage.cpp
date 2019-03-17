@@ -69,8 +69,8 @@ bool verbose = false;
 bool ui = false;
 
 // Provide this literal as the source image to find image on the RPi screen
-#define CMDLINE_DISPMANX_SOURCE   "dispmanx"
-#define CMDLINE_SHOW_UI           "ui"
+const char *CMDLINE_DISPMANX_SOURCE = "dispmanx";
+const char *CMDLINE_SHOW_UI = "ui";
 
 
 int main(int argc, char** argv)
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     }
 
     // the magic name "rpi" for source image means a RaspberryPI screenshot
-    if (!strcmp(CMDLINE_DISPMANX_SOURCE, source_image.c_str())) {
+    if (CMDLINE_DISPMANX_SOURCE == source_image) {
         int rows = 0;
         int cols = 0;
         std::shared_ptr<void> rpi_screen =
