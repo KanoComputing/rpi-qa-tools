@@ -7,13 +7,16 @@ HIDMAIN:=hidmain
 HIDLIB:=hidlib
 LIBS:=/usr/lib/arm-linux-gnueabihf/libdocopt.a
 
+CFLAGS := -std=c++11
+LDFLAGS :=
+
 all: $(APP)
 
 $(APP): $(HIDMAIN).o $(HIDLIB).o
-	gcc $(HIDMAIN).o $(HIDLIB).o -o $(APP) -lstdc++ $(LIBS)
+	$(CXX) $(LDFLAGS) $(HIDMAIN).o $(HIDLIB).o -o $(APP) $(LIBS)
 
 $(HIDMAIN).o: $(HIDMAIN).cpp
-	g++ -c $(HIDMAIN).cpp
+	$(CXX) $(CFLAGS) -I.. -c $(HIDMAIN).cpp
 
 $(HIDLIB).o: $(HIDLIB).cpp
-	g++ -c $(HIDLIB).cpp
+	$(CXX) $(CFLAGS) -c $(HIDLIB).cpp

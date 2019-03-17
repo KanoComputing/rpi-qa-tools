@@ -1,22 +1,30 @@
-/*
- *  rpi-screenshot.cpp
+/**
+ * rpi-screenshot.cpp
  *
- *  Copyright (C) 2016 Kano Computing Ltd.
- *  License:   http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * Copyright (C) 2019 Kano Computing Ltd.
+ * License: http://www.gnu.org/licenses/gpl-2.0.txt GNU GPL v2
  *
- *  This module grabs a screenshot from the raspberry PI GPU and returns a plain bitmap array.
+ * This module grabs a screenshot from the raspberry PI GPU and returns a plain
+ * bitmap array.
  *
- *  Conditional compilation is in place to allow for building on other platforms.
+ * Conditional compilation is in place to allow for building on other platforms.
  *
  */
 
-#include "rpi-screenshot.h"
+
+#include "qa-findimage/rpi-screenshot.h"
+
+#include <cstdint>
+#include <memory>
 
 #ifndef RPI
 
 // On non RPI systems, simply return no bitmap.
 #warning "non RPi build, creating a screenshot stub code"
-void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight) { return (void *)0L; }
+void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
+{
+    return nullptr;
+}
 
 #else
 
@@ -37,7 +45,7 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight) { return (void
  */
 void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
 {
-    int result=0;
+    int result = 0;
 
     bcm_host_init();
 
@@ -46,16 +54,15 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
     DISPMANX_MODEINFO_T modeInfo;
     result = vc_dispmanx_display_get_info(displayHandle, &modeInfo);
 
-    if (result != 0)
-    {
+    if (result != 0) {
         printf("unable to get display information\n");
-	bcm_host_deinit();
-        return(NULL);
+        bcm_host_deinit();
+        return nullptr;
     }
 
     // RGB colorspace, 3 bytes per pixel
     VC_IMAGE_TYPE_T imageType = VC_IMAGE_RGB888;
-    int bytesPerPixel  = 3;
+    int bytesPerPixel = 3;
 
     int width = modeInfo.width;
     int height = modeInfo.height;
@@ -63,11 +70,10 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
 
     void *dmxImagePtr = malloc(pitch * height);
 
-    if (dmxImagePtr == NULL)
-    {
+    if (dmxImagePtr == nullptr) {
         printf("unable to allocated image buffer\n");
-	bcm_host_deinit();
-        return(NULL);
+        bcm_host_deinit();
+        return nullptr;
     }
 
     uint32_t vcImagePtr = 0;
@@ -84,8 +90,7 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
     VC_RECT_T rect;
 
     result = vc_dispmanx_rect_set(&rect, 0, 0, width, height);
-    if (verbose)
-    {
+    if (verbose) {
         printf("vc_dispmanx_rect_set() returned %d\n", result);
         printf("rect = { %d, %d, %d, %d }\n",
                rect.x,
@@ -94,14 +99,13 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
                rect.height);
     }
 
-    if (result != 0)
-    {
+    if (result != 0) {
         vc_dispmanx_resource_delete(resourceHandle);
         vc_dispmanx_display_close(displayHandle);
 
         printf("vc_dispmanx_rect_set() failed\n");
-	bcm_host_deinit();
-        return(NULL);
+        bcm_host_deinit();
+        return nullptr;
     }
 
     // transfer the bitmap array
@@ -110,26 +114,24 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
                                             dmxImagePtr,
                                             pitch);
 
-    if (result != 0)
-    {
+    if (result != 0) {
         vc_dispmanx_resource_delete(resourceHandle);
         vc_dispmanx_display_close(displayHandle);
 
         printf("vc_dispmanx_resource_read_data() failed\n");
-	bcm_host_deinit();
-        return(NULL);
+        bcm_host_deinit();
+        return nullptr;
     }
+
     result = vc_dispmanx_resource_delete(resourceHandle);
 
-    if (verbose)
-    {
+    if (verbose) {
         printf("vc_dispmanx_resource_delete() returned %d\n", result);
     }
 
     result = vc_dispmanx_display_close(displayHandle);
 
-    if (verbose)
-    {
+    if (verbose) {
         printf("vc_dispmanx_display_close() returned %d\n", result);
     }
 
@@ -142,7 +144,7 @@ void *get_rpi_screenshot(bool verbose, int *pwidth, int *pheight)
         *pheight = height;
     }
 
-    return (dmxImagePtr);
+    return dmxImagePtr;
 }
 
 #endif

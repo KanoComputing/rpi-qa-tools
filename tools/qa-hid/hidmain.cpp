@@ -1,25 +1,26 @@
-/*  
- *  fakemain.c
- *  
- *  command line frontend to the fakehid functions.
+/**
+ * fakemain.c
+ *
+ * Copyright (C) 2019 Kano Computing Ltd.
+ * License: http://www.gnu.org/licenses/gpl-2.0.txt GNU GPL v2
+ *
+ * Command line frontend to the fakehid functions.
  *
  */
 
-#include <string>
-#include <stdio.h>
-#include <iostream>
-#include <map>
-
-#include <unistd.h>
-
-#include <linux/input.h>
-#include <linux/uinput.h>
 
 #include <docopt/docopt.h>
+#include <linux/input.h>
+#include <linux/uinput.h>
+#include <stdio.h>
+#include <unistd.h>
 
-#include "hidlib.h"
+#include <cstdint>
+#include <iostream>
+#include <map>
+#include <string>
 
-using namespace std;
+#include "qa-hid/hidlib.h"
 
 
 static const char USAGE[] =
@@ -94,48 +95,50 @@ std::map <std::string, int> special_keys = {
 
 int main(int argc, char **argv)
 {
-  int uifd;
-  int rc=0;
+    int uifd;
+    int rc = 0;
 
-  // Parsing command line arguments with docopt.
-  std::map<std::string, docopt::value> args =
-    docopt::docopt(USAGE, {argv + 1, argv + argc});
+    // Parsing command line arguments with docopt.
+    std::map<std::string, docopt::value> args =
+        docopt::docopt(USAGE, {argv + 1, argv + argc});
 
-  if (args["key-press"].asBool()) {
-    std::string key = args["<key>"].asString();
-    std::cout << "sending key-press: " << key.c_str() << std::endl;
-    uifd = uinput_open();
+    if (args["key-press"].asBool()) {
+        std::string key = args["<key>"].asString();
+        std::cout << "sending key-press: " << key.c_str() << std::endl;
+        uifd = uinput_open();
 
-    std::map<std::string, int>::iterator it;
-    it = special_keys.find(key);
-    if (it != special_keys.end()) {
-        std::cout << "Sending special key-press " << it->first << " : " << it->second << std::endl;
-        single_key_press(uifd, it->second);
-    }
-    else {
-        std::cout << "Sending key-press: " << key.c_str()[0] << std::endl;
+        std::map<std::string, int>::iterator it;
+        it = special_keys.find(key);
+
+        if (it != special_keys.end()) {
+            std::cout << "Sending special key-press " << it->first
+                      << " : " << it->second << std::endl;
+            single_key_press(uifd, it->second);
+        } else {
+            std::cout << "Sending key-press: " << key.c_str()[0] << std::endl;
+            single_key_press(uifd, ascii_to_linux_key(key.c_str()[0]));
+        }
+    } else if (args["key-stroke"].asBool()) {
+        std::string key = args["<key>"].asString();
+        int32_t delay = static_cast<int32_t>(args["<time_ms>"].asLong());
+
+        std::cout << "sending key-stroke: " << key.c_str()
+                  << " with delay: " << delay << std::endl;
+        uifd = uinput_open();
         single_key_press(uifd, ascii_to_linux_key(key.c_str()[0]));
-    }
-  }
-  else if (args["key-stroke"].asBool()) {
-    std::string key = args["<key>"].asString();
-    long delay = args["<time_ms>"].asLong();
+        std::cout << "delay" << std::endl;
+        usleep(100 * delay);
+        single_key_release(uifd, ascii_to_linux_key(key.c_str()[0]));
+    } else if (args["mouse-click"].asBool()) {
+        std::cout << "sending mouse-click: "
+                  << args["<button>"].asString().c_str() << std::endl;
+        uifd = uinput_open();
 
-    std::cout << "sending key-stroke: " << key.c_str() << " with delay: " << delay << std::endl;
-    uifd = uinput_open();
-    single_key_press(uifd, ascii_to_linux_key(key.c_str()[0]));
-    std::cout << "delay" << std::endl;
-    usleep(100 * delay);
-    single_key_release(uifd, ascii_to_linux_key(key.c_str()[0]));
-  }
-  else if (args["mouse-click"].asBool()) {
-    std::cout << "sending mouse-click: " << args["<button>"].asString().c_str() << std::endl;
-    uifd = uinput_open();
-    if (args["<button>"].asString() == "BTN_LEFT") {
-      mouse_left_click(uifd);
+        if (args["<button>"].asString() == "BTN_LEFT") {
+            mouse_left_click(uifd);
+        }
     }
-  }
 
-  uinput_close(uifd);
-  exit(rc);
+    uinput_close(uifd);
+    exit(rc);
 }

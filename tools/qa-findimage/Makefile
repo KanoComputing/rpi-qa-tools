@@ -24,5 +24,5 @@ ifdef NORPI
 	$(eval RPI_LIBS = "")
 endif
 
-	gcc $(DEFS) qa-findimage.cpp rpi-screenshot.cpp -Wall -o qa-findimage \
-	$(RPI_INCS) $(RPI_LIBS) -lstdc++ $(OPENCV_LIBS)
+	$(CXX) -I.. $(DEFS) qa-findimage.cpp rpi-screenshot.cpp -Wall -o qa-findimage \
+	$(RPI_INCS) $(RPI_LIBS) -lstdc++ -std=c++11 $(OPENCV_LIBS)
