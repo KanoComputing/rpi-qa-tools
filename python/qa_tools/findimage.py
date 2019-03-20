@@ -10,6 +10,7 @@
 import os
 import json
 
+
 def call_findimage(source_image, asset_image):
     '''
     Returns a json object as a result of executing qa-findimage command_line
@@ -17,7 +18,9 @@ def call_findimage(source_image, asset_image):
 
     # stderr to /dev/null due to this generic issue on some png files
     # libpng warning: iCCP: known incorrect sRGB profile
-    command_line = 'qa-findimage {} {} 2>/dev/null'.format(source_image, asset_image)
+    command_line = 'qa-findimage {} {} 2>/dev/null'.format(
+        source_image, asset_image
+    )
     return json.loads(os.popen(command_line).read())
 
 
@@ -27,6 +30,7 @@ def is_asset_on_screen(asset):
     '''
     findimage_json = call_findimage('dispmanx', asset)
     return findimage_json['found']
+
 
 def get_json_from_screen(asset):
     return call_findimage('dispmanx', asset)
