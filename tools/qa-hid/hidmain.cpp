@@ -11,18 +11,9 @@
 
 #include <docopt/docopt.h>
 
-#ifdef RPI
-
 #include <linux/input.h>
 #include <linux/uinput.h>
-
-#else
-
-#define KEY_ENTER 28
-#define KEY_ESC 1
-#define KEY_TAB 15
-
-#endif  // RPI
+#include <linux/input-event-codes.h>
 
 #include <stdio.h>
 #include <unistd.h>

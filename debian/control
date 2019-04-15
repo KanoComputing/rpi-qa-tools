@@ -12,7 +12,8 @@ Build-Depends: debhelper (>= 9),
    libopencv-core-dev,
    libopencv-highgui-dev,
    libopencv-imgproc-dev,
-   libraspberrypi-dev
+   libraspberrypi-dev,
+   linux-libc-dev
 
 Package: rpi-qa-tools
 Architecture: any
