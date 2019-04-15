@@ -20,6 +20,7 @@
 
 #define KEY_ENTER 0
 #define KEY_ESC 1
+#define KEY_TAB 15
 
 #endif  // RPI
 
@@ -99,7 +100,8 @@ Examples:
 
 std::map <std::string, int> special_keys = {
     { std::string("KEY_ENTER"), KEY_ENTER },
-    { std::string("KEY_ESC"), KEY_ESC }
+    { std::string("KEY_ESC"), KEY_ESC },
+    { std::string("KEY_TAB"), KEY_TAB }
 };
 
 
