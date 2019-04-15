@@ -18,7 +18,7 @@
 
 #else
 
-#define KEY_ENTER 0
+#define KEY_ENTER 28
 #define KEY_ESC 1
 #define KEY_TAB 15
 
