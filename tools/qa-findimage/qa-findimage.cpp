@@ -109,7 +109,6 @@ int main(int argc, char** argv)
             std::cout << "Error: could not take a dispmanx screenshot\n";
             return 1;
         } else {
-
             // CV_8UC3 means 8-bit unsigned integer matrix, with 3 bytes per
             // channel.
             img = Mat(rows, cols, CV_8UC3, rpi_screen.get());
@@ -122,7 +121,6 @@ int main(int argc, char** argv)
             }
         }
     } else {
-
         // load images, sanity checks
         img = cv::imread(source_image, 1);
         if (!img.data) {
