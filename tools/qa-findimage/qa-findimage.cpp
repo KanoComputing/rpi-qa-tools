@@ -69,14 +69,16 @@ bool verbose = false;
 bool ui = false;
 
 // Provide this literal as the source image to find image on the RPi screen
-const char *CMDLINE_DISPMANX_SOURCE = "dispmanx";
-const char *CMDLINE_SHOW_UI = "ui";
+std::string CMDLINE_DISPMANX_SOURCE = "dispmanx";
+std::string CMDLINE_SHOW_UI = "ui";
 
 
 int main(int argc, char** argv)
 {
     std::string source_image;
     std::string image_to_find;
+
+    std::shared_ptr<void> rpi_screen = NULL;
 
     if (argc < 3) {
         std::cout <<
@@ -101,13 +103,13 @@ int main(int argc, char** argv)
     if (CMDLINE_DISPMANX_SOURCE == source_image) {
         int rows = 0;
         int cols = 0;
-        std::shared_ptr<void> rpi_screen =
-            get_rpi_screenshot(verbose, &cols, &rows);
+        rpi_screen = get_rpi_screenshot(verbose, &cols, &rows);
 
         if (!rpi_screen) {
             std::cout << "Error: could not take a dispmanx screenshot\n";
             return 1;
         } else {
+
             // CV_8UC3 means 8-bit unsigned integer matrix, with 3 bytes per
             // channel.
             img = Mat(rows, cols, CV_8UC3, rpi_screen.get());
@@ -120,6 +122,7 @@ int main(int argc, char** argv)
             }
         }
     } else {
+
         // load images, sanity checks
         img = cv::imread(source_image, 1);
         if (!img.data) {
@@ -131,7 +134,6 @@ int main(int argc, char** argv)
 
     // the image we want to find
     templ = cv::imread(image_to_find, 1);
-
     if (!templ.data) {
         std::cout << "Error: could not open image to find file: "
                   << image_to_find << std::endl;
@@ -139,7 +141,6 @@ int main(int argc, char** argv)
     }
 
     MatchingMethod(0, 0, output_image);
-
     return 0;
 }
 
