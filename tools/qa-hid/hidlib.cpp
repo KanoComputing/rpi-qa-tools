@@ -114,6 +114,46 @@ void uinput_close(int fd)
   close(fd);
 }
 
+
+/* assume that the mouse pointer is currently at 0,0 top-left */
+void move_mouse_absolute(int uifd, int x, int y)
+{
+  struct input_event event;
+
+  // X axis mouse movement
+  bzero(&event, sizeof(event));
+  gettimeofday(&event.time, NULL);
+  event.type = EV_REL;
+  event.code = REL_X;
+  event.value = x;
+  write(uifd, &event, sizeof(event));
+
+  bzero(&event, sizeof(event));
+  gettimeofday(&event.time, NULL);
+  event.type = EV_SYN;
+  event.code = SYN_REPORT;
+  event.value = 0;
+  write(uifd, &event, sizeof(event));
+
+  // Y axis mouse movement
+  bzero(&event, sizeof(event));
+  gettimeofday(&event.time, NULL);
+  event.type = EV_REL;
+  event.code = REL_Y;
+  event.value = y;
+  write(uifd, &event, sizeof(event));
+
+  bzero(&event, sizeof(event));
+  gettimeofday(&event.time, NULL);
+  event.type = EV_SYN;
+  event.code = SYN_REPORT;
+  event.value = 0;
+  write(uifd, &event, sizeof(event));
+
+  return;
+}
+
+
 void move_mouse_one_pixel(int uifd)
 {
   // move pointer left by 1 pixel
@@ -160,6 +200,7 @@ void move_mouse_upper_left(int uifd)
     event.type = EV_SYN;
     event.code = SYN_REPORT;
     event.value = 0;
+
     write(uifd, &event, sizeof(event));
 
     // delay
@@ -203,6 +244,7 @@ void move_mouse_top_left(int uifd, int screen_width, int screen_height)
 {
   int i;
   struct input_event event;
+
   for (i = 0; i < screen_width / 10; i++) {
 
     bzero(&event, sizeof(event));
@@ -227,7 +269,7 @@ void move_mouse_top_left(int uifd, int screen_width, int screen_height)
     write(uifd, &event, sizeof(event));
 
     // delay
-    usleep(16 * 1000);
+    usleep(3 * 1000);
   }
 }
 

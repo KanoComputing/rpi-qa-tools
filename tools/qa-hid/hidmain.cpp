@@ -1,5 +1,5 @@
 /**
- * fakemain.c
+ * himain.cpp
  *
  * Copyright (C) 2019 Kano Computing Ltd.
  * License: http://www.gnu.org/licenses/gpl-2.0.txt GNU GPL v2
@@ -33,7 +33,7 @@ Usage:
     fakehid key-press <key>
     fakehid key-release <key>
     fakehid key-stroke <key> [--delay <time_ms>]
-    fakehid mouse-move <abs_x> <abs_y>
+    fakehid mouse-move <abs_x> <abs_y> [--scale <factor>]
     fakehid mouse-press <button>
     fakehid mouse-release <button>
     fakehid mouse-click <button> [--delay <time_ms>]
@@ -141,6 +141,29 @@ int main(int argc, char **argv)
         if (args["<button>"].asString() == "BTN_LEFT") {
             mouse_left_click(uifd);
         }
+    } else if (args["mouse-move"].asBool()) {
+
+        std::cout << "absolute mouse position requested" << std::endl;
+        long x = args["<abs_x>"].asLong();
+        long y = args["<abs_y>"].asLong();
+
+        // FIXME: detect that the option is not passed
+        double factor = atof(args["<factor>"].asString().c_str());
+
+        uifd = uinput_open();
+
+        // TODO: Ideally we want to query the screen size programmatically, outside X1
+        std::cout << "moving mouse to top left screen corner" << std::endl;
+        move_mouse_top_left(uifd, 9999, 9999);
+        std::cout << "moving mouse to absolute coordinates x=" << x << " y=" << y << std::endl;
+
+        if (factor) {
+            // translate coordinates to a given scale factor
+            x = x * factor;
+            y = y * factor;
+            std::cout << "scale=" << factor << " translated x=" << x << " translated y=" << y << std::endl;
+        }
+        move_mouse_absolute(uifd, x, y);
     }
 
     uinput_close(uifd);
