@@ -11,3 +11,12 @@ qa-hid:
 
 qa-findimage:
 	cd tools/qa-findimage && make
+
+
+test: test-qa-hid test-qa-findimage
+
+test-qa-hid:
+	cd test && time python -m pytest -s qa-hid
+
+test-qa-findimage:
+	cd test && time python -m pytest qa-findimage

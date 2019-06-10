@@ -23,7 +23,6 @@ def call_findimage(source_image, asset_image):
     )
     return json.loads(os.popen(command_line).read())
 
-
 def is_asset_on_screen(asset):
     '''
     Returns True if the asset file is located on the screen
@@ -31,6 +30,15 @@ def is_asset_on_screen(asset):
     findimage_json = call_findimage('dispmanx', asset)
     return findimage_json['found']
 
+def is_asset_on_image(image, asset):
+    '''
+    Returns True if the asset file is located on the screen
+    '''
+    findimage_json = call_findimage(image, asset)
+    return findimage_json['found']
 
 def get_json_from_screen(asset):
     return call_findimage('dispmanx', asset)
+
+def get_json_from_image(image, asset):
+    return call_findimage(image, asset)

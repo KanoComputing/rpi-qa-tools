@@ -1,7 +1,7 @@
 /**
- * findimage.cpp
+ * qa-findimage.cpp
  *
- * Copyright (C) 2019 Kano Computing Ltd.
+ * Copyright (C) 2016-2019 Kano Computing Ltd.
  * License: http://www.gnu.org/licenses/gpl-2.0.txt GNU GPL v2
  *
  * A simple console tool to search an image contained in another image using
@@ -57,10 +57,9 @@ using cv::Point;
 void MatchingMethod(int, void*, const std::string &output_image);
 
 // Global Variables
-Mat img;
-Mat templ;
-Mat result;
-Mat result_threshold;
+Mat img;       // img is the source image
+Mat templ;     // templ is the image we want to find
+Mat result;    // the result of finding templ in img
 double accuracy_ratio = 0.6f;
 
 
@@ -188,6 +187,33 @@ void MatchingMethod(__attribute__((unused)) int count,
 
     // return a json to the console with the finding
     bool found = accuracy_val < accuracy_ratio ? false : true;
+    if (!found) {
+
+      // try again but resizing the image to find
+      cv::resize(templ, templ, cv::Size(templ.cols * 0.75, templ.rows * 0.75), 0, 0, CV_INTER_LINEAR);
+
+      // The actual image search happens here
+      result.create(result_rows, result_cols, CV_32FC1);
+      cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, Mat());
+      cv::matchTemplate(img, templ, result, match_method);
+
+      cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat());
+
+      // For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all
+      // the other methods, the higher the better
+      if (match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED) {
+        matchLoc = minLoc;
+        accuracy_val = maxVal;
+      } else {
+        matchLoc = maxLoc;
+        accuracy_val = maxVal;
+      }
+
+      // return a json to the console with the finding
+      found = accuracy_val < accuracy_ratio ? false : true;
+    }
+      
+    
     std::cout << "{ "
               <<     "\"found\": " << (found ? "true" : "false") << ", "
               <<     "\"x\": " << matchLoc.x << ", "

@@ -14,7 +14,8 @@ Build-Depends: debhelper (>= 9),
    libopencv-imgproc-dev,
    libraspberrypi-dev,
    linux-libc-dev,
-   python-pytest
+   python-pytest,
+   time
 
 Package: rpi-qa-tools
 Architecture: any
