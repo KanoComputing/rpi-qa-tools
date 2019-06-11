@@ -19,4 +19,4 @@ test-qa-hid:
 	cd test && time python -m pytest -s qa-hid
 
 test-qa-findimage:
-	cd test && time python -m pytest qa-findimage
+	cd test && python -m pytest qa-findimage
