@@ -60,7 +60,7 @@ void MatchingMethod(int, void*, const std::string &output_image);
 Mat img;       // img is the source image
 Mat templ;     // templ is the image we want to find
 Mat result;    // the result of finding templ in img
-double accuracy_ratio = 0.6f;
+double accuracy_ratio = 0.55f;
 
 
 // TODO: command line
@@ -80,8 +80,7 @@ int main(int argc, char** argv)
     std::shared_ptr<void> rpi_screen = NULL;
 
     if (argc < 3) {
-        std::cout <<
-            "Syntax: findimage <source image> <image to find> [output image]\n";
+        std::cout << "Syntax: findimage <source image> <image to find> [output image]\n";
         return 1;
     } else {
         source_image = argv[1];
@@ -141,6 +140,35 @@ int main(int argc, char** argv)
     return 0;
 }
 
+bool findImage (Mat *result, Mat *img, Mat *templ, int match_method, double accuracy_ratio,
+                double *minVal, double *maxVal, Point *minLoc, Point *maxLoc, Point *matchLoc)
+{
+    double accuracy_val=0;
+
+    // Create the result matrix
+    int result_cols = img->cols - templ->cols + 1;
+    int result_rows = img->rows - templ->rows + 1;
+
+    // The actual image search happens here
+    result->create(result_rows, result_cols, CV_32FC1);
+    cv::normalize(*result, *result, 0, 1, cv::NORM_MINMAX, -1, Mat());
+    cv::matchTemplate(*img, *templ, *result, match_method);
+    cv::minMaxLoc(*result, minVal, maxVal, minLoc, maxLoc, Mat());
+
+    // For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all
+    // the other methods, the higher the better
+    accuracy_val = *maxVal;
+    matchLoc->x = maxLoc->x;
+    matchLoc->y = maxLoc->y;
+
+    // TODO: enable debugging / verbose mode
+    //std::cout << "findImage iteration accuracy_val=" << accuracy_val << " accuracy_ratio=" << accuracy_ratio << std::endl;
+
+    // return a json to the console with the finding
+    return (accuracy_val < accuracy_ratio ? false : true);
+}
+
+
 
 void MatchingMethod(__attribute__((unused)) int count,
                     __attribute__((unused)) void *userdata,
@@ -151,68 +179,32 @@ void MatchingMethod(__attribute__((unused)) int count,
     // CV_TM_CCORR_NORMED, CV_TM_CCOEFF, CV_TM_CCOEFF_NORMED
 
     int match_method = CV_TM_CCOEFF_NORMED;
+    double minVal;
+    double maxVal;
+    Point minLoc;
+    Point maxLoc;
+    Point matchLoc;
+    bool found;
 
     // Source image to display
     Mat img_display;
     img.copyTo(img_display);
 
-    // Create the result matrix
-    int result_cols = img.cols - templ.cols + 1;
-    int result_rows = img.rows - templ.rows + 1;
-
-    // The actual image search happens here
-    result.create(result_rows, result_cols, CV_32FC1);
-    cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, Mat());
-    cv::matchTemplate(img, templ, result, match_method);
-
-    // Localizing the best match with minMaxLoc
-    double minVal;
-    double maxVal;
-    double accuracy_val;
-    Point minLoc;
-    Point maxLoc;
-    Point matchLoc;
-
-    cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat());
-
-    // For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all
-    // the other methods, the higher the better
-    if (match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED) {
-        matchLoc = minLoc;
-        accuracy_val = maxVal;
-    } else {
-        matchLoc = maxLoc;
-        accuracy_val = maxVal;
-    }
-
-    // return a json to the console with the finding
-    bool found = accuracy_val < accuracy_ratio ? false : true;
+    // Try to find the image
+    found = findImage(&result, &img, &templ, match_method, accuracy_ratio, &minVal, &maxVal,
+                      &minLoc, &maxLoc, &matchLoc);
     if (!found) {
-
-      // try again but resizing the image to find
-      cv::resize(templ, templ, cv::Size(templ.cols * 0.75, templ.rows * 0.75), 0, 0, CV_INTER_LINEAR);
-
-      // The actual image search happens here
-      result.create(result_rows, result_cols, CV_32FC1);
-      cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, Mat());
-      cv::matchTemplate(img, templ, result, match_method);
-
-      cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat());
-
-      // For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all
-      // the other methods, the higher the better
-      if (match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED) {
-        matchLoc = minLoc;
-        accuracy_val = maxVal;
-      } else {
-        matchLoc = maxLoc;
-        accuracy_val = maxVal;
-      }
-
-      // return a json to the console with the finding
-      found = accuracy_val < accuracy_ratio ? false : true;
+        // try again but resizing the image UP to find to a smaller size
+        cv::resize(templ, templ, cv::Size(templ.cols * 1.25, templ.rows * 1.25), 0, 0, CV_INTER_LINEAR);
+        found = findImage(&result, &img, &templ, match_method, accuracy_ratio, &minVal, &maxVal,
+                          &minLoc, &maxLoc, &matchLoc);
+        if (!found) {
+            // try again but resizing the image DOWN to find to a smaller size
+            cv::resize(templ, templ, cv::Size(templ.cols * 0.40, templ.rows * 0.40), 0, 0, CV_INTER_LINEAR);
+            found = findImage(&result, &img, &templ, match_method, accuracy_ratio, &minVal, &maxVal,
+                              &minLoc, &maxLoc, &matchLoc);
+        }
     }
-      
     
     std::cout << "{ "
               <<     "\"found\": " << (found ? "true" : "false") << ", "
@@ -235,8 +227,7 @@ void MatchingMethod(__attribute__((unused)) int count,
         cv::rectangle(img_display, matchLoc, match_coord,
                   found ? rgb_green : rgb_red, 2, 8, 0);
 
-        // Either save an image to show finding, or open up a window (on non RPI
-        // systems)
+        // Either save an image to show finding, or open up a X11 window
         if (output_image == CMDLINE_SHOW_UI) {
             std::string window_name =
                 std::string("FindImage: ") + (found ? "Yes" : "No");

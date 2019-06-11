@@ -11,15 +11,17 @@ import os
 import json
 
 
-def call_findimage(source_image, asset_image):
+def call_findimage(source_image, asset_image, ui=False):
     '''
     Returns a json object as a result of executing qa-findimage command_line
     '''
 
+    ui_flag = 'ui' if ui else ''
+
     # stderr to /dev/null due to this generic issue on some png files
     # libpng warning: iCCP: known incorrect sRGB profile
-    command_line = 'qa-findimage {} {} 2>/dev/null'.format(
-        source_image, asset_image
+    command_line = 'qa-findimage {} {} {} 2>/dev/null'.format(
+        source_image, asset_image, ui_flag
     )
     return json.loads(os.popen(command_line).read())
 

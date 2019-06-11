@@ -15,12 +15,12 @@ from findimage import *
 dashboard_screenshot = 'qa-findimage/data/kano-dashboard.png'
 asset_path_exact = 'qa-findimage/data/exact_size'
 asset_path_scaled_down = 'qa-findimage/data/88x88'
-asset_path_scaled_up = 'qa-findimage/data/140x140'
+asset_path_scaled_up = 'qa-findimage/data/188x188'
 
-def find_asset(asset, expected_x, expected_y, expected_width, expected_height, accuracy=10):
+def find_asset(asset, expected_x, expected_y, expected_width, expected_height, accuracy=16):
     '''
-    Calls qa-findimage through the official Python module, to find the asset
-    at the given coordinates with the specified size, within "accuracy" pixels.
+    Calls qa-findimage through the official Python module, to locate the asset
+    at the given coordinates with the specified size, all within plus/minus "accuracy" pixels.
     '''
     assert (is_asset_on_image(dashboard_screenshot, asset) == True)
     j = get_json_from_image (dashboard_screenshot, asset)
