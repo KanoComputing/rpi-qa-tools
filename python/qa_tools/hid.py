@@ -12,25 +12,25 @@ import os
 QA_HID = 'sudo /usr/bin/qa-hid'
 
 
-def _call_hid(command_line):
-    os.popen(command_line)
+def _call_hid_pipe(options):
+    os.popen('{} {}'.format(QA_HID, options))
+
+def _call_hid(options):
+    return os.WEXITSTATUS(os.system('{} {}'.format(QA_HID, options)))
+
 
 
 def key_press(key):
-    command_line = '{} key-press {}'.format(QA_HID, key)
-    _call_hid(command_line)
-
+    options = 'key-press {}'.format(key)
+    return (_call_hid(options) == 0)
 
 def key_stroke(key, delay=0):
-    command_line = '{} key-stroke {} --delay {}'.format(QA_HID, key, delay)
-    _call_hid(command_line)
-
+    options = 'key-stroke {} --delay {}'.format(key, delay)
+    return (_call_hid(options) == 0)
 
 def mouse_move(abs_x, abs_y):
-    command_line = '{} mouse-move {} {}'.format(QA_HID, abs_x, abs_y)
-    _call_hid(command_line)
-
+    options = 'mouse-move {} {}'.format(abs_x, abs_y)
+    return (_call_hid(options) == 0)
 
 def mouse_left_click():
-    command_line = '{} mouse-click BTN_LEFT'.format(QA_HID)
-    _call_hid(command_line)
+    return (_call_hid('mouse-click BTN_LEFT') == 0)
