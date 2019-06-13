@@ -10,7 +10,7 @@ DEFS =
 
 
 RPI_INCS=-I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux
-RPI_LIBS=-L/opt/vc/lib -lbcm_host
+RPI_LIBS=-L/opt/vc/lib -lbcm_host -ldocopt
 
 OPENCV_LIBS=-lopencv_highgui -lopencv_core -lopencv_imgproc
 

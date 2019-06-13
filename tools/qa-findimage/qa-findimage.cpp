@@ -4,41 +4,14 @@
  * Copyright (C) 2016-2019 Kano Computing Ltd.
  * License: http://www.gnu.org/licenses/gpl-2.0.txt GNU GPL v2
  *
- * A simple console tool to search an image contained in another image using
- * OpenCV matchTemplate algorithm.
+ * A console tool to search an image contained in another image using OpenCV matchTemplate algorithm.
  *
  * Read the official explanation to understand how this works:
  *     http://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/template_matching/template_matching.html
  *
- * Usage: findimage: <source image> <image to find> [output image | "ui"]
- *
- * A JSON string will be returned explaining if and where the image was found,
- * for example:
- *
- *     {
- *         "found": true,
- *         "x": 765,
- *         "y": 30,
- *         "width": 209,
- *         "height": 80,
- *         "minVal": -0.595378,
- *         "maxVal": 0.578674
- *     }
- *
- * If output image is provided, an image will be rendered with a green box
- * surrounding the match, or a red box marking the best approximation, if the
- * image couldn't be found (see accuracy_ratio variable).
- *
- * If output image is "ui" it will displayed on a window (non RPI systems at
- * this time).
- *
- * If source image is "dispmanx", the image to find will be searched for on the
- * current RPi screen.
- *
- * Should accept most major formats (png, jpg, ..)
- *
  */
 
+#include <docopt/docopt.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -56,11 +29,13 @@ using cv::Point;
 // function prototypes
 void MatchingMethod(int, void*, const std::string &output_image);
 
+#define DEFAULT_ACCURACY_RATIO   0.55f
+
 // Global Variables
-Mat img;       // img is the source image
-Mat templ;     // templ is the image we want to find
-Mat result;    // the result of finding templ in img
-double accuracy_ratio = 0.55f;
+Mat img;               // img is the source image
+Mat templ;             // templ is the image we want to find
+Mat result;            // the result of finding templ in img
+double accuracy_ratio;
 
 
 // TODO: command line
@@ -72,29 +47,97 @@ std::string CMDLINE_DISPMANX_SOURCE = "dispmanx";
 std::string CMDLINE_SHOW_UI = "ui";
 
 
+
+static const char USAGE[] =
+  R"(qa-findimage is a tool that locates assets on the screen and images. It will dump a Json object with finding details.
+
+Usage:
+    qa-findimage <source_image> <asset_image> [--output=target_image] [--verbose] [--accuracy=n]
+
+Arguments:
+    <source_image> Filename of the source image, where you want to locate the given asset.
+                   pass 'dispmanx' on this parameter to take a RaspberryPI screenshot as the source image.
+
+    <asset_image>  Filename of an image that you want to locate on the source_image.
+                   Normally this will be a smaller image, an icon or other asset contained on the source image.
+                   The resolution does not need to be exactly the same as the one on the source image.
+
+    [--output=target_image]
+                   Optionally you can dump the finding on a .png file, this will be the source image,
+                   with a rectangle to mark the asset that has been found - in green - or otherwise
+                   in red, indicating that it was not correctly found.
+
+                   Pass 'ui' to popup an interactive X11 window to show the results,
+                   instead of saving it as a target_image.
+Options:
+
+    -v --verbose
+                   Explain the steps taken through the process.
+
+    -a --accuracy
+                   A float number from 0.0 to 1.0 indicating the amount of expected accuracy to decide
+                   when the asset is correctly found. Use this option on rare cases where
+                   a false negative is detected.
+
+    -h, --help
+        Show this message.
+
+Examples:
+    qa-findimage dispmanx /usr/share/icons/desktop.png
+    { 'found': true, 'x': 452, 'y': 228, 'width': 86, 'height': 88, 'minVal': -0.334045, 'maxVal': 0.868913 }
+
+    qa-findimage desktop-screenshot.png /usr/share/icons/desktop.png ui
+    { 'found': true, 'x': 452, 'y': 228, 'width': 86, 'height': 88, 'minVal': -0.334045, 'maxVal': 0.868913 }
+
+    The ui option will popup a X11 window displaying desktop-screenshot.png with a green rectangle
+    sorrounding the desktop.png icon.
+
+    qa-findimage desktop-screenshot.png /usr/share/icons/desktop.png results.png
+    { 'found': true, 'x': 452, 'y': 228, 'width': 86, 'height': 88, 'minVal': -0.334045, 'maxVal': 0.868913 }
+
+    Same as above, but instead of popping up a window, the image will be saved at results.png.)";
+
 int main(int argc, char** argv)
 {
-    std::string source_image;
-    std::string image_to_find;
-
+    std::string source_image, image_to_find, output_image, accuracy;
     std::shared_ptr<void> rpi_screen = NULL;
+    bool verbose=false;
 
-    if (argc < 3) {
-        std::cout << "Syntax: findimage <source image> <image to find> [output image]\n";
-        return 1;
-    } else {
-        source_image = argv[1];
-        image_to_find = argv[2];
+    // Collect docopt command line options
+    std::map<std::string, docopt::value> args =
+        docopt::docopt(USAGE, {argv + 1, argv + argc});
+
+    verbose = args["--verbose"].asBool();
+    source_image = args["<source_image>"].asString();
+    image_to_find = args["<asset_image>"].asString();
+
+    if (args["--accuracy"].isString()) {
+        accuracy_ratio = atof (args["--accuracy"].asString().c_str());
+    }
+    else {
+        accuracy_ratio = DEFAULT_ACCURACY_RATIO;
+    }
+
+    if (args["--output"].isString()) {
+        output_image = args["--output"].asString();
+    }
+
+    if (verbose) {
+        for(auto const& arg : args) {
+            std::cout << arg.first << ": " << arg.second << std::endl;
+        }
+        
+        std::cout << "assigned options " << source_image << std::endl;
+        std::cout << " source image: " << source_image << std::endl;
+        std::cout << " asset image: " << image_to_find << std::endl;
+        std::cout << " output image: " << image_to_find << std::endl;
+        std::cout << " accuracy: " << accuracy_ratio << std::endl;
     }
 
     // output image to graphically explain the match
-    std::string output_image;
-    if (argc == 4) {
-        output_image = argv[3];
-        if (output_image == CMDLINE_SHOW_UI) {
-            // show it on the screen directly in a X11 window
-            ui = true;
-        }
+    if (output_image == CMDLINE_SHOW_UI) {
+        // show it on the screen directly in a X11 window
+        ui = true;
     }
 
     // the magic name "rpi" for source image means a RaspberryPI screenshot
@@ -161,8 +204,9 @@ bool findImage (Mat *result, Mat *img, Mat *templ, int match_method, double accu
     matchLoc->x = maxLoc->x;
     matchLoc->y = maxLoc->y;
 
-    // TODO: enable debugging / verbose mode
-    //std::cout << "findImage iteration accuracy_val=" << accuracy_val << " accuracy_ratio=" << accuracy_ratio << std::endl;
+    if (verbose) {
+        std::cout << "findImage iteration accuracy_val=" << accuracy_val << " accuracy_ratio=" << accuracy_ratio << std::endl;
+    }
 
     // return a json to the console with the finding
     return (accuracy_val < accuracy_ratio ? false : true);
