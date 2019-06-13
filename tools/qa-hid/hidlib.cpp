@@ -58,7 +58,7 @@ int uinput_open(void)
 
   if ((fd = open(UINPUT_DEVICE_PATH, O_WRONLY | O_NDELAY)) < 0) {
       //fprintf(stderr, "%s: openining \"%s\" failed: %s\n", program_name, UINPUT_DEVICE_PATH, strerror(errno));
-      exit(3);
+      return -1;
   }
 
   bzero(&uidev, sizeof(uidev));

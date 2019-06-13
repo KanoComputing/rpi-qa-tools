@@ -33,7 +33,7 @@ Usage:
     fakehid key-press <key>
     fakehid key-release <key>
     fakehid key-stroke <key> [--delay <time_ms>]
-    fakehid mouse-move <abs_x> <abs_y> [--scale <factor>]
+    fakehid mouse-move <x> <y> [--scale <factor>] [--relative]
     fakehid mouse-press <button>
     fakehid mouse-release <button>
     fakehid mouse-click <button> [--delay <time_ms>]
@@ -122,6 +122,7 @@ int main(int argc, char **argv)
             std::cout << "Sending key-press: " << key.c_str()[0] << std::endl;
             single_key_press(uifd, ascii_to_linux_key(key.c_str()[0]));
         }
+
     } else if (args["key-stroke"].asBool()) {
         std::string key = args["<key>"].asString();
         int32_t delay = static_cast<int32_t>(args["<time_ms>"].asLong());
@@ -133,6 +134,7 @@ int main(int argc, char **argv)
         std::cout << "delay" << std::endl;
         usleep(100 * delay);
         single_key_release(uifd, ascii_to_linux_key(key.c_str()[0]));
+
     } else if (args["mouse-click"].asBool()) {
         std::cout << "sending mouse-click: "
                   << args["<button>"].asString().c_str() << std::endl;
@@ -141,31 +143,43 @@ int main(int argc, char **argv)
         if (args["<button>"].asString() == "BTN_LEFT") {
             mouse_left_click(uifd);
         }
+
     } else if (args["mouse-move"].asBool()) {
 
-        std::cout << "absolute mouse position requested" << std::endl;
-        long x = args["<abs_x>"].asLong();
-        long y = args["<abs_y>"].asLong();
+        std::cout << "mouse-move pointer position requested" << std::endl;
+        long x = args["<x>"].asLong();
+        long y = args["<y>"].asLong();
+        double factor=0;
 
-        // FIXME: detect that the option is not passed
-        double factor = atof(args["<factor>"].asString().c_str());
+        if (args["<factor>"].isString()) {
+            factor = atof(args["<factor>"].asString().c_str());
+        }
 
         uifd = uinput_open();
-
-        // TODO: Ideally we want to query the screen size programmatically, outside X1
-        std::cout << "moving mouse to top left screen corner" << std::endl;
-        move_mouse_top_left(uifd, 9999, 9999);
-        std::cout << "moving mouse to absolute coordinates x=" << x << " y=" << y << std::endl;
-
-        if (factor) {
-            // translate coordinates to a given scale factor
-            x = x * factor;
-            y = y * factor;
-            std::cout << "scale=" << factor << " translated x=" << x << " translated y=" << y << std::endl;
+        if (uifd < 0) {
+            std::cout << "error opening the input device rc=" << uifd << std::endl;
+            rc = 1;
         }
-        move_mouse_absolute(uifd, x, y);
+        else {
+            if (!args["--relative"].asBool()) {
+                std::cout << "resetting mouse position to top left screen corner" << std::endl;
+                move_mouse_top_left(uifd, 4000, 4000);
+            }
+
+            std::cout << "moving mouse to coordinates x=" << x << " y=" << y << std::endl;
+
+            if (factor) {
+                // translate coordinates to a given scale factor
+                x = x * factor;
+                y = y * factor;
+                std::cout << "scale=" << factor << " translated x=" << x << " translated y=" << y << std::endl;
+            }
+            move_mouse_absolute(uifd, x, y);
+        }
     }
 
-    uinput_close(uifd);
+    if (uifd > 0) {
+        uinput_close(uifd);
+    }
     exit(rc);
 }
