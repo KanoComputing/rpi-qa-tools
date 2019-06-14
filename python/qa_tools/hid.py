@@ -32,5 +32,9 @@ def mouse_move(abs_x, abs_y):
     options = 'mouse-move {} {}'.format(abs_x, abs_y)
     return (_call_hid(options) == 0)
 
+def mouse_move(abs_x, abs_y, scale=0.5):
+    options = 'mouse-move {} {} --scale {}'.format(abs_x, abs_y, scale)
+    return (_call_hid(options) == 0)
+
 def mouse_left_click():
     return (_call_hid('mouse-click BTN_LEFT') == 0)
