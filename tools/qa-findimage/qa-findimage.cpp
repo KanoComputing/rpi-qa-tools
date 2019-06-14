@@ -237,16 +237,21 @@ void MatchingMethod(__attribute__((unused)) int count,
     // Try to find the image
     found = findImage(&result, &img, &templ, match_method, accuracy_ratio, &minVal, &maxVal,
                       &minLoc, &maxLoc, &matchLoc);
-    if (!found) {
-        // try again but resizing the image UP to find to a smaller size
-        cv::resize(templ, templ, cv::Size(templ.cols * 1.25, templ.rows * 1.25), 0, 0, CV_INTER_LINEAR);
-        found = findImage(&result, &img, &templ, match_method, accuracy_ratio, &minVal, &maxVal,
-                          &minLoc, &maxLoc, &matchLoc);
-        if (!found) {
-            // try again but resizing the image DOWN to find to a smaller size
-            cv::resize(templ, templ, cv::Size(templ.cols * 0.40, templ.rows * 0.40), 0, 0, CV_INTER_LINEAR);
+    if (!found && templ.cols) {
+
+        // If the resized asset would become larger than the source image
+        // there is no point on trying to find it
+        if ((templ.cols * 1.25 < img.cols) && (templ.rows * 1.25 < img.rows)) {
+            // try again but resizing the image UP to find to a smaller size
+            cv::resize(templ, templ, cv::Size(templ.cols * 1.25, templ.rows * 1.25), 0, 0, CV_INTER_LINEAR);
             found = findImage(&result, &img, &templ, match_method, accuracy_ratio, &minVal, &maxVal,
                               &minLoc, &maxLoc, &matchLoc);
+            if (!found) {
+                // try again but resizing the image DOWN to find to a smaller size
+                cv::resize(templ, templ, cv::Size(templ.cols * 0.40, templ.rows * 0.40), 0, 0, CV_INTER_LINEAR);
+                found = findImage(&result, &img, &templ, match_method, accuracy_ratio, &minVal, &maxVal,
+                                  &minLoc, &maxLoc, &matchLoc);
+            }
         }
     }
     
